@@ -67,6 +67,9 @@ int is_escape_char(char ch) {
 // Input segment
 char *inFileName = "";
 char HELP_FLAG = 0; // false. Also the "\0" character.
+char CAPITAL_FLAG = 0;
+
+unsigned char PaddingSize = 8; // default padding size
 
 int ch;
 
@@ -75,7 +78,7 @@ int HexPerLine = 16;
 int Buf_forChars16[16]; // chances are this will be malloc
 
 int Hex_Counter = 16; // will be resetted to 0 later for hex counter = hexperline
-unsigned int LineNum = 0; 
+unsigned long long int LineNum = 0; 
 // this can actually be change to unsigned long and long long int for larger files
 
 
@@ -95,7 +98,18 @@ int main(int argc, char *argv[]) {
             CLI_0ARGS(i, "-h", HELP_FLAG);
 
         }
+        else if (strcmp(argv[i], "-caps") == 0) {
+            CLI_0ARGS(i, "-caps", CAPITAL_FLAG);
+        }
 
+        else if (strcmp(argv[i], "--padding") == 0 || strcmp(argv[i], "-p") == 0) {
+            if (i + 1 >= argc) { 
+                printf("Error: " "-p" " requires an argument.\n"); 
+                return 1; 
+                } 
+                PaddingSize = atoi(argv[i+1]); 
+                i+=2; 
+        }
         else {
             printf("Unknown command or missing arguments: %s.\n", argv[i]);
             printf("Type -h or --help for usage help.\n");
@@ -103,16 +117,30 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    if (PaddingSize > 16 || PaddingSize == 0 || PaddingSize == 1) {
+        printf("Padding size invalid or too large: %d.", PaddingSize);
+        return 1;
+    }
+
+    char *_FormatIndex = "%0*x  ";
+    char *_FormatHexChar = "%.2x ";
+
+    if (CAPITAL_FLAG == 1) {
+        _FormatIndex = "%0*X  ";
+        _FormatHexChar = "%.2X ";
+    }
+    
     if (HELP_FLAG == 1) {
         printf("Usage: hexcat.exe [flags] <args>...\n");
         printf("-i <args>: File input.\n");
+        printf("-p --padding <args>: Specify index padding. Default value is 8.\n");
+        printf("-caps: Capitalizes hex characters.\n");
         printf("-h --help: Show this list.\n");
 
         if (strcmp(inFileName, "") == 0) {
             return 1;
         }
     }
-
 
     FILE *INPUT_FILE  = fopen(inFileName, "rb");
 
@@ -122,19 +150,15 @@ int main(int argc, char *argv[]) {
         if (Hex_Counter == HexPerLine) {
             Hex_Counter = 0;
             printf("\n");
-            printf("%08x  ", LineNum); // %08x could be changed
+            printf(_FormatIndex, PaddingSize ,LineNum); // %08x could be changed
             LineNum+=HexPerLine;
         }
         
-        printf("%.2x ", ch);
+        printf(_FormatHexChar, ch);
         
 
         Buf_forChars16[Hex_Counter] = ch;
         Hex_Counter++;
-
-        // if (Hex_Counter == 8) {
-        //     printf(" ");
-        // }
 
         if (Hex_Counter == HexPerLine) {
             // printf(" "); // separator, is actually 2 spaces cuz of "%.2x " you know.
@@ -167,10 +191,15 @@ int main(int argc, char *argv[]) {
 
     printf("\n");
 
-    printf("End of file reached. Total file size: %d B.", LineNum - (HexPerLine - Hex_Counter));
+    printf("End of file reached. Total file size: %llu B.\n", LineNum - (HexPerLine - Hex_Counter));
     
-    printf("\n\n");
+    if (LineNum - (HexPerLine - Hex_Counter) == 0) {
+        printf("Input was likely incorrect: %s\n", inFileName);
+    }
+
+    printf("\n");
     
     fclose(INPUT_FILE);
+    return 0;
 }
 
