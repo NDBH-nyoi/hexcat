@@ -7,45 +7,9 @@
 #include "useful_macros.c"
 #include "other_functions.c"
 
+#include "declarations.c" // includes most of the variables' name
+// Go here to define new ones
 
-// Input segment
-char *inFileName = "";
-char HELP_FLAG = 0; // false. Also the "\0" character.
-char CAPITAL_FLAG = 0;
-
-unsigned char PaddingSize = 8; // default padding size
-
-char STATS_FLAG = 0;
-char STATS_FREQ_FLAG = 0;
-char STATS_VERBOSE_FLAG = 0;
-unsigned char STATS_PADDING = 4; // Haven't done any work yet
-unsigned char STATS_SPACEPADDING = 4;
-unsigned char COLUMN_NUMBER = 8;
-
-unsigned int byteStats[256] = {0}; // each index represent the value of that byte e.g 0x10 is at index 16
-
-char *MATCH_STRING="";
-char RETURN_MATCH_STR[96] = "";
-char MATCH_FLAG = 0;
-unsigned char MatchIndexPadding = 2;
-int MATCH_BREAKPOINT = 1;
-char BREAKPOINT_FLAG = 0;
-char SILENT_FLAG = 0;
-
-// Can probably do a comparision, and do a stats print with order most frequent to least frequent.
-// if you want, you can make it so bytes with no appearance doesn't get printed.
-
-
-// LOOK HERE FOR DIRECTIVES!!!
-
-int ch;
-
-// char *_Format = "%.2x ";
-int HexPerLine = 16;
-int Buf_forChars16[16]; // chances are this will be malloc
-
-int Hex_Counter = 16; // will be resetted to 0 later for hex counter = hexperline
-unsigned long long int LineNum = 0; 
 
 int main(int argc, char *argv[]) {
     int i = 1; // No subcommands for now
@@ -120,18 +84,12 @@ int main(int argc, char *argv[]) {
                 i+=2;
         }
         
-        else if (strcmp(argv[i], "-m-br") == 0) {
-            if (i + 1 >= argc) { 
-                printf("Error: " "-m-br" " requires an argument.\n"); 
-                return 1; } 
-                MATCH_BREAKPOINT = atoi(argv[i+1]);
-                BREAKPOINT_FLAG = 1;
-                i+=2;
-            
-        }
-
         else if (strcmp(argv[i], "--silent") == 0 || strcmp(argv[i], "-sil") == 0) {
             CLI_0ARGS(i, "-sil", SILENT_FLAG);
+        }
+
+        else if (strcmp(argv[i], "-ref") == 0) {
+            CLI_0ARGS(i, "-ref", REFERENCE_FLAG);
         }
 
         else {
@@ -159,17 +117,6 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     }
-
-    unsigned char ConversionBuf[32]; // streamed into from input
-    unsigned char ConverBufCounter = 0; // counter for conversion buf, also length of conversion buf
-    unsigned char ComparisonBuf[32]; // streamed into from fgetc, is int also
-    // Max length should be equal to length of conversion buf, 
-    //when that happens, we start doing memmove stuff 
-    unsigned char CompareCounter = 0;
-    long long int matchesPosition[128]; // holds matches position, this is really easy to overflow if the file is too large.
-    unsigned char PositionCounter = 0;
-    unsigned char EqualCounter = 0;
-    // Also do it so if ConverBufCounter, ComparisonCounter > 32 then exit
 
     strcpy(RETURN_MATCH_STR, MATCH_STRING);
 
@@ -248,13 +195,9 @@ int main(int argc, char *argv[]) {
                     }
                 }
             } 
-        }
-        if (PositionCounter == MATCH_BREAKPOINT && BREAKPOINT_FLAG == 1) {
-            break;
-        }
+        }     
     }
 
-    
     // this part is for dealing with the residue characters
     // that weren't printed
 
@@ -271,12 +214,6 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-    if (PositionCounter == MATCH_BREAKPOINT && BREAKPOINT_FLAG == 1) {
-        printf("\nBreakpoint %d reached. (Matching %s).\n", MATCH_BREAKPOINT, RETURN_MATCH_STR);
-    }
-    if (PositionCounter != MATCH_BREAKPOINT && BREAKPOINT_FLAG == 1) {
-        printf("\nBreakpoint %d doesn't exist. (Matching %s).\n", MATCH_BREAKPOINT, RETURN_MATCH_STR);
-    }
 
     printf("\n");
 
@@ -285,6 +222,11 @@ int main(int argc, char *argv[]) {
     if (LineNum - (HexPerLine - Hex_Counter) == 0) {
         printf("Input was likely incorrect: %s\n", inFileName);
     }
+
+    if (REFERENCE_FLAG == 1) {
+        PRINT_REFERENCE();
+    }
+
     if (MATCH_FLAG == 1) {
         printf("\n");
         printf("Matches to %s (length +%d): \n", RETURN_MATCH_STR, ConverBufCounter);
