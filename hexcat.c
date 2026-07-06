@@ -3,88 +3,9 @@
 #include <string.h>
 #include <limits.h>
 
-#define CLI_0ARGS(counter, flag, arg1) do {\
-    arg1=1;\
-    counter+=1;\
-} while(0)\
 
-#define CLI_1ARGS(counter, flag, arg1) do {\
-if (counter + 1 >= argc) { \
-    printf("Error: " flag " requires an argument.\n"); \
-    return 1; \
-} \
-arg1 = argv[counter+1]; \
-counter+=2; \
-} while(0)\
-
-#define CLI_2ARGS(counter, flag, arg1, arg2) do {\
-    if (counter + 2 >= argc) { \
-        printf("Error: " flag " requires 2 arguments.\n"); \
-        return 1; \
-    } \
-    arg1 = argv[counter+1];\
-    arg2 = argv[counter+2];\
-    counter+=3; \
-} while(0)\
-
-// #define BACKGROUND_COLOR(r,g,b) "\e[48;2;" r ";" g ";" b "m"
-// #define RED "\e[48;2;255;0;0m"
-// #define GREEN "\e[48;2;0;255;0m"
-// #define BLUE "\e[48;2;0;0;255m"
-// #define YELLOW "\e[48;2;255;255;0";
-// #define PURPLE "\e[48;2;128;0;128";
-
-// #define RESET "\e[0m"
-
-int is_escape_char(char ch) {
-    switch (ch) {
-        case '\n':
-        case '\r':
-        case '\t':
-        case '\v':
-        case '\b':
-        case '\f':
-        case '\a':
-        case '\\':
-        case '\'':
-        case '\"':
-        case '\?': 
-        case '\0':
-            return 1; // true
-        default:
-            return 0; // false
-    }
-}
-
-void print_help() {
-    printf("Usage: hexcat.exe [flags] <args>...\n");
-    printf("-i <arg>: File input.\n");
-    printf("-p --padding <arg>: Specify index padding. Default is 8.\n");
-    printf("-caps: Capitalizes hex characters.\n");
-    
-    printf("--stats: At the end of cat-ting, "
-        "returns a table with the frequency of each byte.\n");
-
-    printf("flags that support --stats:\n");
-    printf("    -st-p --stats-padding <arg_num>: "
-        "Specify the frequency padding. Default is 4.\n");
-    printf("    -st-sp --stats-space <arg_num>: "
-        "Specify the whitespace padding between columns. Default is 4.\n");
-    printf("    -st-c --stats-colnum <arg_num>: "
-        "Specify the number of columns. Default is 8.\n");
-    printf("    -st-v --stats-verbose: Will print hexs that have 0 occurence. "
-        "Default hides this.\n");
-    printf("    -fr --freq: Display stats table from highest to lowest frequency order.\n");
-
-    printf("-h --help: Show this list.\n");
-}
-
-//.\\test - Copy.exe 
-//.\\shorter_example.txt
-
-// Guess if I want to use the --highlight flag multiple times,
-// the idea would be to just create a buffer write the input into the buffer
-//highlight either: -hl blue or -hl 0 0 255.
+#include "useful_macros.c"
+#include "other_functions.c"
 
 
 // Input segment
@@ -117,8 +38,6 @@ int Buf_forChars16[16]; // chances are this will be malloc
 
 int Hex_Counter = 16; // will be resetted to 0 later for hex counter = hexperline
 unsigned long long int LineNum = 0; 
-// this can actually be change to unsigned long and long long int for larger files
-
 
 int main(int argc, char *argv[]) {
     int i = 1; // No subcommands for now
@@ -202,9 +121,8 @@ int main(int argc, char *argv[]) {
         _FormatIndex = "%0*X  ";
         _FormatHexChar = "%.2X ";
     }
-    
     if (HELP_FLAG == 1) {
-        print_help(); // Go to print help to write additional help
+        PRINT_HELP(); // Go to print help to write additional help
         if (strcmp(inFileName, "") == 0) {
             return 1;
         }
@@ -299,7 +217,7 @@ int main(int argc, char *argv[]) {
             printf("Hex with 0 occurences are hidden.\n");
             int Hidden_ColumnCounter = 0;
             for (int i = 0; i < 256; i++) {
-                if (Hidden_ColumnCounter % COLUMN_NUMBER == 0) {
+                if (Hidden_ColumnCounter % (COLUMN_NUMBER+1) == 0) {
                     printf("\n");
                     Hidden_ColumnCounter++;
                 }
@@ -317,4 +235,3 @@ int main(int argc, char *argv[]) {
     fclose(INPUT_FILE);
     return 0;
 }
-
