@@ -24,6 +24,9 @@ unsigned char COLUMN_NUMBER = 8;
 
 unsigned int byteStats[256] = {0}; // each index represent the value of that byte e.g 0x10 is at index 16
 
+char *MATCH_STRING="";
+char MATCH_FLAG = 0;
+
 // Can probably do a comparision, and do a stats print with order most frequent to least frequent.
 // if you want, you can make it so bytes with no appearance doesn't get printed.
 
@@ -101,7 +104,10 @@ int main(int argc, char *argv[]) {
         else if (strcmp(argv[i], "--stats-verbose") == 0 || strcmp(argv[i], "-st-v") == 0) {
             CLI_0ARGS(i, "-st-v", STATS_VERBOSE_FLAG);
         }
-
+        else if (strcmp(argv[i], "--match") == 0 || strcmp(argv[i], "-m") == 0) {
+            CLI_1ARGS(i, "-m", MATCH_STRING);
+            MATCH_FLAG = 1;
+        }
         else {
             printf("Unknown command or missing arguments: %s.\n", argv[i]);
             printf("Type -h or --help for usage help.\n");
@@ -128,6 +134,33 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    unsigned char ConversionBuf[32]; // streamed into from input
+    unsigned char ConverBufCounter = 0; // counter for conversion buf, also length of conversion buf
+    unsigned char ComparisonBuf[32]; // streamed into from fgetc, is int also
+    // Max length should be equal to length of conversion buf, 
+    //when that happens, we start doing memmove stuff 
+    unsigned char CompareCounter = 0;
+    long long int matchesPosition[32]; // holds matches position
+    unsigned char PositionCounter = 0;
+    unsigned char EqualCounter = 0;
+    // Also do it so if ConverBufCounter, ComparisonCounter > 32 then exit
+
+
+    if (MATCH_FLAG == 1) {
+        char *Token = strtok(MATCH_STRING, ",");
+        while (Token != NULL) {
+            ConversionBuf[ConverBufCounter] = strtol(Token, NULL, 16);
+            printf("%d\n",strtol(Token, NULL, 16));
+            // implement error handling for strtol here
+            ConverBufCounter++;
+            Token = strtok(NULL, ",");
+        }
+    }
+    if (ConverBufCounter > 32 && MATCH_FLAG == 1) {
+        printf("Exceed matching string's buffer.\n");
+        return 1;
+    }
+
     FILE *INPUT_FILE  = fopen(inFileName, "rb");
 
     while ((ch = fgetc(INPUT_FILE)) != EOF) {
@@ -142,6 +175,44 @@ int main(int argc, char *argv[]) {
         
         printf(_FormatHexChar, ch);
 
+        if (MATCH_FLAG == 1) {
+            
+            if (CompareCounter != ConverBufCounter) {
+                ComparisonBuf[CompareCounter] = ch;
+                CompareCounter++;
+            }
+            else {
+                // for (int i = 0; i < CompareCounter;i++) {
+                //     printf("%d\n", ComparisonBuf[i]);
+                // }
+        
+                memmove(&ComparisonBuf[0],&ComparisonBuf[1],(CompareCounter-1) * sizeof(unsigned char));
+                ComparisonBuf[CompareCounter-1] = ch;
+                // debug
+                // printf("\n");
+                // for (int i = 0; i < CompareCounter;i++) {
+                    // printf("Debug 1: %x\n", ComparisonBuf[i]);
+                    // printf("Input: %x\n", ConversionBuf[i]);
+                // }
+
+            }
+            
+            for (int i=0; i < ConverBufCounter;i++) {
+                if (ComparisonBuf[i] != ConversionBuf[i]) {
+                    EqualCounter = 0;
+                    break;
+                }
+                else {
+                    EqualCounter++;
+                }
+            }
+            if (EqualCounter == ConverBufCounter) {
+                matchesPosition[PositionCounter] = (LineNum - 16) + Hex_Counter - ConverBufCounter + 1;
+                // printf("Length is %d\n", LineNum + Hex_Counter - ConverBufCounter);
+                PositionCounter++;
+                EqualCounter = 0;
+            }
+        }
         if (STATS_FLAG == 1) {
             byteStats[ch]++;
         }
@@ -184,6 +255,11 @@ int main(int argc, char *argv[]) {
         printf("Input was likely incorrect: %s\n", inFileName);
     }
 
+    if (MATCH_FLAG == 1) {
+        for (int i = 0; i < PositionCounter; i++) {
+            printf("Match starting at position %x.\n", matchesPosition[i]);
+        }
+    }
     if (STATS_FREQ_FLAG == 1 && STATS_FLAG == 0) {
         printf("Frequency flag --freq has to be used with --stats.\n");
         return 1;
