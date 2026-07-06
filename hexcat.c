@@ -25,7 +25,10 @@ unsigned char COLUMN_NUMBER = 8;
 unsigned int byteStats[256] = {0}; // each index represent the value of that byte e.g 0x10 is at index 16
 
 char *MATCH_STRING="";
+char RETURN_MATCH_STR[96] = "";
 char MATCH_FLAG = 0;
+
+char SILENT_FLAG = 0;
 
 // Can probably do a comparision, and do a stats print with order most frequent to least frequent.
 // if you want, you can make it so bytes with no appearance doesn't get printed.
@@ -108,6 +111,11 @@ int main(int argc, char *argv[]) {
             CLI_1ARGS(i, "-m", MATCH_STRING);
             MATCH_FLAG = 1;
         }
+
+        else if (strcmp(argv[i], "--silent") == 0 || strcmp(argv[i], "-sil") == 0) {
+            CLI_0ARGS(i, "-sil", SILENT_FLAG);
+        }
+
         else {
             printf("Unknown command or missing arguments: %s.\n", argv[i]);
             printf("Type -h or --help for usage help.\n");
@@ -145,12 +153,14 @@ int main(int argc, char *argv[]) {
     unsigned char EqualCounter = 0;
     // Also do it so if ConverBufCounter, ComparisonCounter > 32 then exit
 
+    strcpy(RETURN_MATCH_STR, MATCH_STRING);
 
     if (MATCH_FLAG == 1) {
         char *Token = strtok(MATCH_STRING, ",");
         while (Token != NULL) {
+
             ConversionBuf[ConverBufCounter] = strtol(Token, NULL, 16);
-            printf("%d\n",strtol(Token, NULL, 16));
+            // printf("%d\n",(int)strtol(Token, NULL, 16));
             // implement error handling for strtol here
             ConverBufCounter++;
             Token = strtok(NULL, ",");
@@ -168,47 +178,35 @@ int main(int argc, char *argv[]) {
 
         if (Hex_Counter == HexPerLine) {
             Hex_Counter = 0;
-            printf("\n");
-            printf(_FormatIndex, PaddingSize ,LineNum); // %08x could be changed
+            if (SILENT_FLAG != 1) {
+                printf("\n");
+                printf(_FormatIndex, PaddingSize ,LineNum); // %08x could be changed
+            }
             LineNum+=HexPerLine;
         }
         
-        printf(_FormatHexChar, ch);
+        if (SILENT_FLAG != 1) {
+            printf(_FormatHexChar, ch);
+        }
 
         if (MATCH_FLAG == 1) {
-            
             if (CompareCounter != ConverBufCounter) {
                 ComparisonBuf[CompareCounter] = ch;
                 CompareCounter++;
             }
             else {
-                // for (int i = 0; i < CompareCounter;i++) {
-                //     printf("%d\n", ComparisonBuf[i]);
-                // }
-        
                 memmove(&ComparisonBuf[0],&ComparisonBuf[1],(CompareCounter-1) * sizeof(unsigned char));
                 ComparisonBuf[CompareCounter-1] = ch;
-                // debug
-                // printf("\n");
-                // for (int i = 0; i < CompareCounter;i++) {
-                    // printf("Debug 1: %x\n", ComparisonBuf[i]);
-                    // printf("Input: %x\n", ConversionBuf[i]);
-                // }
-
-            }
-            
+            }   
             for (int i=0; i < ConverBufCounter;i++) {
                 if (ComparisonBuf[i] != ConversionBuf[i]) {
                     EqualCounter = 0;
                     break;
                 }
-                else {
-                    EqualCounter++;
-                }
+                else { EqualCounter++; }
             }
             if (EqualCounter == ConverBufCounter) {
                 matchesPosition[PositionCounter] = (LineNum - 16) + Hex_Counter - ConverBufCounter + 1;
-                // printf("Length is %d\n", LineNum + Hex_Counter - ConverBufCounter);
                 PositionCounter++;
                 EqualCounter = 0;
             }
@@ -222,29 +220,32 @@ int main(int argc, char *argv[]) {
 
         if (Hex_Counter == HexPerLine) {
             // printf(" "); // separator, is actually 2 spaces cuz of "%.2x " you know.
-            for (int i = 0; i < 16; i++) {
-                if (is_escape_char(*(Buf_forChars16+i)) == 1) {
-                    printf(".");
+            if (SILENT_FLAG != 1) {
+                for (int i = 0; i < 16; i++) {
+                    if (is_escape_char(*(Buf_forChars16+i)) == 1) {
+                        printf(".");
+                    }
+                    else {
+                        printf("%c", *(Buf_forChars16+i));
+                    }
                 }
-                else {
-                    printf("%c", *(Buf_forChars16+i));
-                }
-            }
+            } 
         }
     }
     // this part is for dealing with the residue characters
     // that weren't printed
 
-    for (int i = 0; i < HexPerLine - Hex_Counter; i++) {
-        printf("   ");
-    }
-
-    for (int i = 0; i < Hex_Counter; i++) {
-        if (is_escape_char(*(Buf_forChars16+i)) == 1) {
-            printf(".");
+    if (SILENT_FLAG != 1) {
+        for (int i = 0; i < HexPerLine - Hex_Counter; i++) {
+            printf("   ");
         }
-        else {
-            printf("%c", *(Buf_forChars16+i));
+        for (int i = 0; i < Hex_Counter; i++) {
+            if (is_escape_char(*(Buf_forChars16+i)) == 1) {
+                printf(".");
+            }
+            else {
+                printf("%c", *(Buf_forChars16+i));
+            }
         }
     }
     printf("\n");
@@ -254,27 +255,31 @@ int main(int argc, char *argv[]) {
     if (LineNum - (HexPerLine - Hex_Counter) == 0) {
         printf("Input was likely incorrect: %s\n", inFileName);
     }
-
     if (MATCH_FLAG == 1) {
+        printf("\n");
+        printf("Matches to %s (length +%d): \n", RETURN_MATCH_STR, ConverBufCounter);
+
         for (int i = 0; i < PositionCounter; i++) {
             printf("Match starting at position %x.\n", matchesPosition[i]);
+        }
+        if (PositionCounter == 0) {
+            printf("No matches founded.\n");
         }
     }
     if (STATS_FREQ_FLAG == 1 && STATS_FLAG == 0) {
         printf("Frequency flag --freq has to be used with --stats.\n");
         return 1;
     }
-
     if (STATS_PADDING > 16 || STATS_PADDING == 0) {
         printf("Stats padding size is invalid or too large: %d.", STATS_PADDING);
         return 1;
     }
     if (STATS_SPACEPADDING > 16 || STATS_SPACEPADDING == 0) {
-        printf("Stats space padding is size invalid or too large: %d.", STATS_SPACEPADDING);
+        printf("Stats space padding size is invalid or too large: %d.", STATS_SPACEPADDING);
         return 1;
     }
     if (COLUMN_NUMBER > 16 || COLUMN_NUMBER == 0) {
-        printf("Stats space padding is size invalid or too large: %d.", STATS_SPACEPADDING);
+        printf("Column number is invalid or too large: %d.", COLUMN_NUMBER);
         return 1;
     }
     if (STATS_FLAG == 1) {
