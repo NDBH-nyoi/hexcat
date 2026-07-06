@@ -27,7 +27,9 @@ unsigned int byteStats[256] = {0}; // each index represent the value of that byt
 char *MATCH_STRING="";
 char RETURN_MATCH_STR[96] = "";
 char MATCH_FLAG = 0;
-
+unsigned char MatchIndexPadding = 2;
+int MATCH_BREAKPOINT = 1;
+char BREAKPOINT_FLAG = 0;
 char SILENT_FLAG = 0;
 
 // Can probably do a comparision, and do a stats print with order most frequent to least frequent.
@@ -56,10 +58,8 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[i], "-i") == 0) {
             CLI_1ARGS(i, "-i", inFileName);
         }
-
         else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             CLI_0ARGS(i, "-h", HELP_FLAG);
-
         }
         else if (strcmp(argv[i], "-caps") == 0) {
             CLI_0ARGS(i, "-caps", CAPITAL_FLAG);
@@ -71,9 +71,9 @@ int main(int argc, char *argv[]) {
             if (i + 1 >= argc) { 
                 printf("Error: " "-p" " requires an argument.\n"); 
                 return 1; 
-                } 
+                } // it needs to be like this because of atoi
                 PaddingSize = atoi(argv[i+1]); 
-                i+=2; 
+                i+=2;
         }
 
         else if (strcmp(argv[i], "--stats-colnum") == 0 || strcmp(argv[i], "-st-c") == 0) {
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
         }
         else if (strcmp(argv[i], "--stats-space") == 0 || strcmp(argv[i], "-st-sp") == 0) {
             if (i + 1 >= argc) { 
-                printf("Error: " "-st-space" " requires an argument.\n"); 
+                printf("Error: " "-st-sp" " requires an argument.\n"); 
                 return 1; 
                 } 
                 STATS_SPACEPADDING = atoi(argv[i+1]); 
@@ -110,6 +110,24 @@ int main(int argc, char *argv[]) {
         else if (strcmp(argv[i], "--match") == 0 || strcmp(argv[i], "-m") == 0) {
             CLI_1ARGS(i, "-m", MATCH_STRING);
             MATCH_FLAG = 1;
+        }
+
+        else if (strcmp(argv[i], "--match-padding") == 0 || strcmp(argv[i], "-m-p") == 0) {
+            if (i + 1 >= argc) { 
+                printf("Error: " "-m-p" " requires an argument.\n"); 
+                return 1; } 
+                MatchIndexPadding = atoi(argv[i+1]); 
+                i+=2;
+        }
+        
+        else if (strcmp(argv[i], "-m-br") == 0) {
+            if (i + 1 >= argc) { 
+                printf("Error: " "-m-br" " requires an argument.\n"); 
+                return 1; } 
+                MATCH_BREAKPOINT = atoi(argv[i+1]);
+                BREAKPOINT_FLAG = 1;
+                i+=2;
+            
         }
 
         else if (strcmp(argv[i], "--silent") == 0 || strcmp(argv[i], "-sil") == 0) {
@@ -148,7 +166,7 @@ int main(int argc, char *argv[]) {
     // Max length should be equal to length of conversion buf, 
     //when that happens, we start doing memmove stuff 
     unsigned char CompareCounter = 0;
-    long long int matchesPosition[32]; // holds matches position
+    long long int matchesPosition[128]; // holds matches position, this is really easy to overflow if the file is too large.
     unsigned char PositionCounter = 0;
     unsigned char EqualCounter = 0;
     // Also do it so if ConverBufCounter, ComparisonCounter > 32 then exit
@@ -231,7 +249,12 @@ int main(int argc, char *argv[]) {
                 }
             } 
         }
+        if (PositionCounter == MATCH_BREAKPOINT && BREAKPOINT_FLAG == 1) {
+            break;
+        }
     }
+
+    
     // this part is for dealing with the residue characters
     // that weren't printed
 
@@ -248,6 +271,13 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+    if (PositionCounter == MATCH_BREAKPOINT && BREAKPOINT_FLAG == 1) {
+        printf("\nBreakpoint %d reached. (Matching %s).\n", MATCH_BREAKPOINT, RETURN_MATCH_STR);
+    }
+    if (PositionCounter != MATCH_BREAKPOINT && BREAKPOINT_FLAG == 1) {
+        printf("\nBreakpoint %d doesn't exist. (Matching %s).\n", MATCH_BREAKPOINT, RETURN_MATCH_STR);
+    }
+
     printf("\n");
 
     printf("End of file reached. Total file size: %llu B.\n", LineNum - (HexPerLine - Hex_Counter));
@@ -260,28 +290,27 @@ int main(int argc, char *argv[]) {
         printf("Matches to %s (length +%d): \n", RETURN_MATCH_STR, ConverBufCounter);
 
         for (int i = 0; i < PositionCounter; i++) {
-            printf("Match starting at position %x.\n", matchesPosition[i]);
+            printf("%0*d  ", MatchIndexPadding ,i+1); // this will act as an index
+            printf("Start position %0*x.\n", PaddingSize ,matchesPosition[i]);
         }
         if (PositionCounter == 0) {
             printf("No matches founded.\n");
         }
+        printf("\n" "Total match count: %d.\n", PositionCounter);
     }
     if (STATS_FREQ_FLAG == 1 && STATS_FLAG == 0) {
         printf("Frequency flag --freq has to be used with --stats.\n");
-        return 1;
-    }
+        return 1;}
     if (STATS_PADDING > 16 || STATS_PADDING == 0) {
         printf("Stats padding size is invalid or too large: %d.", STATS_PADDING);
-        return 1;
-    }
+        return 1;}
     if (STATS_SPACEPADDING > 16 || STATS_SPACEPADDING == 0) {
         printf("Stats space padding size is invalid or too large: %d.", STATS_SPACEPADDING);
-        return 1;
-    }
+        return 1;}
     if (COLUMN_NUMBER > 16 || COLUMN_NUMBER == 0) {
         printf("Column number is invalid or too large: %d.", COLUMN_NUMBER);
-        return 1;
-    }
+        return 1;}
+
     if (STATS_FLAG == 1) {
         printf("\n");
         printf("Byte frequency: \n");
