@@ -1,4 +1,5 @@
 // This is not for compilation
+// no include directives should get in
 
 void PRINT_HELP() {
     printf("Usage: hexcat.exe [flags] <args>...\n");
@@ -21,11 +22,18 @@ void PRINT_HELP() {
         "Default hides this.\n");
     printf("    -fr --freq: Display stats table from highest to lowest frequency order.\n");
     
-    printf("-m --match \"num1,num2,...\": Returns the starting position of sequences that matches "
-        "the sequence given. Everything should be under quotes and also seperated by commas.\n");
+    printf("-m --match \"num1 num2 ...\": Return the starting position of sequences that matches "
+        "the sequence given. String should be under quotes and seperated by spaces.\n");
     printf("flags that support --match:\n");
     printf("    -m-p --match-padding <arg_num>: Specify match index padding. Default is 2.\n");
 
+    printf("-sec <line_num1> <line_num2>: Print section from lnum1 to lnum2."
+        " Input will rounded down to the smallest"
+        " line number(e.g 3d4 will go to 3d0). \n");
+    printf("flags derived from -sec:\n");
+    printf("    -l --line <line_num>: Print line line_num.\n");
+    printf("    -se1 <line_num>: Print section 1 line up and 1 line down from current line.\n");
+    
     printf("-sil --silent: Silent mode. Do not print hexdump.\n");
     printf("-ref: Displays useful references for control characters.\n");
     printf("-h --help: Show this list.\n");

@@ -1,3 +1,5 @@
+// This is not for compilation
+// no include directives should get in
 
 // Input segment
 char *inFileName = "";
@@ -13,6 +15,19 @@ unsigned char STATS_PADDING = 4; // Haven't done any work yet
 unsigned char STATS_SPACEPADDING = 4;
 unsigned char COLUMN_NUMBER = 8;
 
+
+// experimenting
+// struct sMatch {
+//     char STATS_FLAG;
+//     char STATS_FREQ_FLAG;
+//     char STATS_VERBOSE_FLAG;
+//     unsigned char STATS_PADDING; // Haven't done any work yet
+//     unsigned char STATS_SPACEPADDING;
+//     unsigned char COLUMN_NUMBER;
+// };
+
+
+
 unsigned int byteStats[256] = {0}; // each index represent the value of that byte e.g 0x10 is at index 16
 
 char *MATCH_STRING="";
@@ -22,7 +37,7 @@ unsigned char MatchIndexPadding = 2;
 
 char SILENT_FLAG = 0;
 char REFERENCE_FLAG = 0;
-// Can probably do a comparision, and do a stats print with order most frequent to least frequent.
+// Can probably do a comparison, and do a stats print with order most frequent to least frequent.
 // if you want, you can make it so bytes with no appearance doesn't get printed.
 
 
@@ -30,11 +45,16 @@ char REFERENCE_FLAG = 0;
 int ch;
 
 // char *_Format = "%.2x ";
-int HexPerLine = 16;
+// int HexPerLine = 16;
 int Buf_forChars16[16]; // chances are this will be malloc
 
 int Hex_Counter = 16; // will be resetted to 0 later for hex counter = hexperline
 unsigned long long int LineNum = 0; 
+
+unsigned long long int SECTION_START = 0;
+unsigned long long int SECTION_END = 0;
+char SECTION_PRINT_MARKER = 0;
+char SECTION_FLAG = 0;
 
 // Note this was on line 122
 unsigned char ConversionBuf[32]; // streamed into from input

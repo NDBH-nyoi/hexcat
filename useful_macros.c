@@ -23,3 +23,12 @@ counter+=2; \
     counter+=3; \
 } while(0)\
 
+#define CLI_1ARGSERR(flag) printf("Error: " flag " requires an argument.\n"); 
+
+// if (counter + 2 >= argc) { 
+//     printf("Error: " flag " requires 2 arguments.\n"); 
+//     return 1; 
+// } 
+// arg1 = argv[counter+1];
+// arg2 = argv[counter+2];
+// counter+=3; 
