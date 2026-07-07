@@ -1,0 +1,7 @@
+
+better formatting for the matches.
+implement breakpoints(?)
+
+Finally, writing and editing mode!
+maybe a match that takes two strings (required equal length), and replace all occurences
+of the 1st string with the 2nd string!
