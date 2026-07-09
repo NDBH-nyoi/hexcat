@@ -13,8 +13,12 @@
 
 char *Input_Name1 = "";
 char *Input_Name2 = "";
-char CLOSE_FLAG = 0;
-
+char OPEN_FLAG = 0;
+const char *NonExistReturn = "   ";
+// "nl "
+int OFFSET1 = 0;
+int OFFSET2 = 0;
+int Matcher = 0; // have to start at one cuz of something
 int main(int argc, char *argv[]) {
     int i = 1;
 
@@ -24,16 +28,31 @@ int main(int argc, char *argv[]) {
     }
 
     while (i < argc) {
-        if (strcmp(argv[i] ,"-i1") == 0) {
-            CLI_1ARGS(i, "-i1", Input_Name1);
+        if (strcmp(argv[i] ,"-i") == 0) {
+            CLI_2ARGS(i, "-i", Input_Name1, Input_Name2);
         }
-        else if (strcmp(argv[i] ,"-i2") == 0) {
-            CLI_1ARGS(i, "-i2", Input_Name2);
+        // else if (strcmp(argv[i] ,"-i2") == 0) {
+        //     CLI_1ARGS(i, "-i2", Input_Name2);
+        // }
+        else if (strcmp(argv[i] ,"-op") == 0 || strcmp(argv[i] ,"--open") == 0) {
+            CLI_0ARGS(i, "-op", OPEN_FLAG);
         }
-        else if (strcmp(argv[i] ,"-cl") == 0 || strcmp(argv[i] ,"--close") == 0) {
-            CLI_0ARGS(i, "-cl", CLOSE_FLAG);
+        else if (strcmp(argv[i] ,"-of1") == 0 || strcmp(argv[i] ,"--offset1") == 0) {
+            if (i + 1 >= argc) { 
+                printf("Error: " "-of1" " requires an argument.\n"); 
+                return 1; 
+            } 
+            OFFSET1 = atoi(argv[i+1]);
+            i+=2; 
         }
-
+        else if (strcmp(argv[i] ,"-of2") == 0 || strcmp(argv[i] ,"--offset2") == 0) {
+            if (i + 1 >= argc) { 
+                printf("Error: " "-of2" " requires an argument.\n"); 
+                return 1; 
+            } 
+            OFFSET2 = atoi(argv[i+1]);
+            i+=2; 
+        }
         else {
             printf("Unknown command or missing arguments: %s.\n", argv[i]);
             printf("Type -h or --help for usage help.\n");
@@ -56,23 +75,24 @@ int main(int argc, char *argv[]) {
     int Buf_forChars16_f1[16];
     int Buf_forChars16_f2[16];
 
+    for (int i = 0; i < OFFSET1; i++) {
+        ch1 = fgetc(INPUT_FILE1);
+    }
+    for (int i = 0; i < OFFSET2; i++) {
+        ch2 = fgetc(INPUT_FILE2);
+    }
     
     while (ch1 != EOF || ch2 != EOF) {
-        if (CLOSE_FLAG != 1) {
+        if (OPEN_FLAG == 1) {
             printf("\n"); // A seperator option
         } 
         printf("%08x  ", LineNum);
         LineNum+=HexperLine;
         for (int i = 0; i < HexperLine; i++) {
             ch1 = fgetc(INPUT_FILE1);
-
-                Buf_forChars16_f1[hexCounter] = ch1;
-
-            if (ch1 == EOF && ch2 == EOF) {
-                BREAKAT_1_FLAG = 1;
-                break;}
+            Buf_forChars16_f1[hexCounter] = ch1;
             if (ch1 == EOF) {
-                printf("nl ");
+                printf(NonExistReturn);
             }
             else {
                 printf("%.2x ", ch1);
@@ -80,7 +100,6 @@ int main(int argc, char *argv[]) {
             }
             hexCounter++;
         }
-        // printf(" ");
 
         // This for padding purposes
         if (hexCounter != 16) {
@@ -95,24 +114,17 @@ int main(int argc, char *argv[]) {
                 printf("%c", Buf_forChars16_f1[i]);
             }
         }
-        
-
         if (hexCounter == 16) {
             hexCounter = 0;
             printf("\n");
-            // Its like this for now
-            printf("%*s  ",8, "-");
+            printf("%*s  ",8, "->");
         }
         
-
         for (int i = 0; i < HexperLine; i++) {
             ch2 = fgetc(INPUT_FILE2);
-
             Buf_forChars16_f2[hexCounter] = ch2;
-
-            if (ch1 == EOF && ch2 == EOF) { break;}
             if (ch2 == EOF) {
-                printf("nl ");
+                printf(NonExistReturn);
             }
             else {
                 printf("%.2x ", ch2);
@@ -120,7 +132,6 @@ int main(int argc, char *argv[]) {
             }
             hexCounter++;
         }
-        // printf(" ");
 
         if (hexCounter != 16) {
             printf("%*s", 3 * (16 - hexCounter), "");
@@ -138,19 +149,24 @@ int main(int argc, char *argv[]) {
             hexCounter = 0;
             printf("\n");
         }
-    }
 
-    if (BREAKAT_1_FLAG == 1) {
-        printf("\n");
-        printf("%*s  ",8, "-");
-        for (int i = 0; i < hexCounter; i++) {
-            printf("NL ");
+        // comparing the two files for match percentage
+        for (int i = 0; i < 16; i++) {
+            if ((Buf_forChars16_f1[i] == Buf_forChars16_f2[i]) && Buf_forChars16_f1[i] != EOF) {
+                Matcher++;
+            }
         }
+    }  
+
+    // printf("\n");
+    printf("End of file reached. Total file size: File 1: %lu B. File 2: %lu B. ", FILE1_Size, FILE2_Size);
+    printf("Total match count: %d.\n", Matcher);
+    printf("\n");
+    if (OFFSET1 != 0 || OFFSET2 != 0) {
+        printf("Offset of file 1: %d.\n", OFFSET1);
+        printf("Offset of file 2: %d.\n", OFFSET2);
     }
-    printf("\n");
-    printf("End of file reached. Total file size: File 1: %lu B. File 2: %lu B.", FILE1_Size, FILE2_Size);
-    printf("\n");
-    printf("Note: nl/NL(Null) means there were no bytes at that position.\n");
+    // printf("Note: nl/NL(Null) means there were no bytes at that position.\n");
     
     
 

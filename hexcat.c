@@ -13,16 +13,47 @@
 
 
 int main(int argc, char *argv[]) {
-    int i = 1; // No subcommands for now
-
+    
     if (argc == 1) {
         HELP_FLAG = 1;
+    
     }
+    else {
+        SubCommand = argv[1];
+    }
+    int i = 1; // No subcommands for now. Yes subcommands
+    
+    if (strcmp(SubCommand, "diff") == 0) {
+        printf("Diff sub is here.\n");
+        // DIFF_SUB_FLAG = 1;
+        int i = 2;
+        return 0; // for now, 
+    }
+    else if (strcmp(SubCommand, "cnv") == 0) {
+        printf("Convert sub is here.\n");
+        int i = 2;
+        return 0; // for now
+    }
+    else if (strcmp(SubCommand, "w") == 0) {
+        printf("Write sub is here.\n");
+        // WRITE_SUB_FLAG = 1;
+        int i = 2;
+        return 0; // for now
+    }
+
+    
+
+    
+    // ofc if subcommands were passed, this functions should continue over here
 
     while (i < argc) {
         // standard
         if (strcmp(argv[i], "-i") == 0) {
-            CLI_1ARGS(i, "-i", inFileName);
+            CLI_1ARGS(i, "-i", inFileName, ); // note the final empty arg is necessary
+        }
+        else if (strcmp(argv[i], "-o") == 0) {
+            CLI_1ARGS(i, "-o", outFileName, );
+            OUTPUT_FLAG = 1;
         }
         else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             CLI_0ARGS(i, "-h", HELP_FLAG);
@@ -30,69 +61,42 @@ int main(int argc, char *argv[]) {
         else if (strcmp(argv[i], "-caps") == 0) {
             CLI_0ARGS(i, "-caps", CAPITAL_FLAG);
         }
-        else if (strcmp(argv[i], "--padding") == 0 || strcmp(argv[i], "-p") == 0) {
-            if (i + 1 >= argc) { 
-                printf("Error: " "-p" " requires an argument.\n"); 
-                return 1; 
-                } // it needs to be like this because of atoi
-                PaddingSize = atoi(argv[i+1]); 
-                i+=2;
+        else if (strcmp(argv[i], "-p") == 0) {
+            CLI_1ARGS(i, "-p", PaddingSize, atoi);
         }
         else if (strcmp(argv[i], "--silent") == 0 || strcmp(argv[i], "-sil") == 0) {
             CLI_0ARGS(i, "-sil", SILENT_FLAG);
         }
-
         else if (strcmp(argv[i], "-ref") == 0) {
             CLI_0ARGS(i, "-ref", REFERENCE_FLAG);
         }
         // statistics
-        else if (strcmp(argv[i], "--stats") == 0) {
+        else if (strcmp(argv[i], "--stats") == 0 || strcmp(argv[i], "-st") == 0) {
             CLI_0ARGS(i, "-stats", STATS_FLAG);
         }
-
-        else if (strcmp(argv[i], "--stats-colnum") == 0 || strcmp(argv[i], "-st-c") == 0) {
-            if (i + 1 >= argc) { 
-                CLI_1ARGSERR("-st-c");
-                return 1; 
-                } 
-                COLUMN_NUMBER = atoi(argv[i+1]); 
-                i+=2; 
+        else if (strcmp(argv[i], "-st-c") == 0) {
+            CLI_1ARGS(i, "-st-c", COLUMN_NUMBER, atoi);
         }
-
-        else if (strcmp(argv[i], "--stats-padding") == 0 || strcmp(argv[i], "-st-p") == 0) {
-            if (i + 1 >= argc) { 
-                CLI_1ARGSERR("-st-p");
-                return 1; 
-                } 
-                STATS_PADDING = atoi(argv[i+1]); 
-                i+=2; 
+        else if (strcmp(argv[i], "-st-p") == 0) {
+            CLI_1ARGS(i, "-st-c", STATS_PADDING, atoi);
         }
-        else if (strcmp(argv[i], "--stats-space") == 0 || strcmp(argv[i], "-st-sp") == 0) {
-            if (i + 1 >= argc) { 
-                CLI_1ARGSERR("-st-sp");
-                return 1; 
-                } 
-                STATS_SPACEPADDING = atoi(argv[i+1]); 
-                i+=2; 
+        else if (strcmp(argv[i], "-st-sp") == 0) {
+             CLI_1ARGS(i, "-st-c", STATS_SPACEPADDING, atoi);
         }
         else if (strcmp(argv[i], "--freq") == 0) {
             CLI_0ARGS(i, "--freq", STATS_FREQ_FLAG);
         }
-        else if (strcmp(argv[i], "--stats-verbose") == 0 || strcmp(argv[i], "-st-v") == 0) {
+        else if (strcmp(argv[i], "-st-v") == 0) {
             CLI_0ARGS(i, "-st-v", STATS_VERBOSE_FLAG);
         }
         // matching
         else if (strcmp(argv[i], "--match") == 0 || strcmp(argv[i], "-m") == 0) {
-            CLI_1ARGS(i, "-m", MATCH_STRING);
+            CLI_1ARGS(i, "-m", MATCH_STRING, );
             MATCH_FLAG = 1;
         }
 
-        else if (strcmp(argv[i], "--match-padding") == 0 || strcmp(argv[i], "-m-p") == 0) {
-            if (i + 1 >= argc) { 
-                CLI_1ARGSERR("-m-p");
-                return 1; } 
-                MatchIndexPadding = atoi(argv[i+1]); 
-                i+=2;
+        else if (strcmp(argv[i], "-m-p") == 0) {
+             CLI_1ARGS(i, "-st-c", MatchIndexPadding, atoi);
         }
         // section
         else if (strcmp(argv[i], "-sec") == 0) {
@@ -120,8 +124,7 @@ int main(int argc, char *argv[]) {
             SECTION_START = strtol(argv[i+1], NULL, 16);
             SECTION_END = strtol(argv[i+1], NULL, 16); 
             SECTION_START = SECTION_START & ~0xf;
-            SECTION_END = SECTION_END & ~0xf;
-            
+            SECTION_END = SECTION_END & ~0xf; 
             SECTION_FLAG = 1;
             i+=2;
         }
@@ -133,7 +136,6 @@ int main(int argc, char *argv[]) {
             SECTION_END = strtol(argv[i+1], NULL, 16); 
             SECTION_START = (SECTION_START & ~0xf) - 16;
             SECTION_END = (SECTION_END & ~0xf) + 16;
-            
             SECTION_FLAG = 1;
             i+=2;
         }
@@ -161,6 +163,11 @@ int main(int argc, char *argv[]) {
         if (strcmp(inFileName, "") == 0) {
             return 1;
         }
+    }
+
+    if (strcmp(inFileName, outFileName)==0) {
+        printf("Input and output files can not be the same.\n");
+        return 1;
     }
 
     strcpy(RETURN_MATCH_STR, MATCH_STRING);
@@ -194,10 +201,13 @@ int main(int argc, char *argv[]) {
     
 
     FILE *INPUT_FILE  = fopen(inFileName, "rb");
-
+    FILE *OUTPUT_FILE;
+    if (OUTPUT_FLAG == 1) {
+        OUTPUT_FILE = fopen(outFileName, "ab");
+    }
+    
     while ((ch = fgetc(INPUT_FILE)) != EOF) {
         // printf("%c", ch);
-        
         if (Hex_Counter == 16) {
             Hex_Counter = 0;
             // this code is making crine...
@@ -224,7 +234,9 @@ int main(int argc, char *argv[]) {
         if ((!SILENT_FLAG && !SECTION_FLAG) || (SECTION_FLAG && SECTION_PRINT_MARKER)) {
             printf(_FormatHexChar, ch);
         }
-
+        if (OUTPUT_FLAG == 1) {
+            fprintf(OUTPUT_FILE,"%c", ch);
+        }
         if (MATCH_FLAG == 1) {
             if (CompareCounter != ConverBufCounter) {
                 ComparisonBuf[CompareCounter] = ch;
@@ -234,7 +246,7 @@ int main(int argc, char *argv[]) {
                 memmove(&ComparisonBuf[0],&ComparisonBuf[1],(CompareCounter-1) * sizeof(unsigned char));
                 ComparisonBuf[CompareCounter-1] = ch;
             }   
-            for (int i=0; i < ConverBufCounter;i++) {
+            for (int i=0; i < ConverBufCounter;i++) {           
                 if (ComparisonBuf[i] != ConversionBuf[i]) {
                     EqualCounter = 0;
                     break;
@@ -306,11 +318,16 @@ int main(int argc, char *argv[]) {
 
     if (MATCH_FLAG == 1) {
         printf("\n");
+        printf("Displaying start positions.\n");
         printf("Matches to %s (length +%d): \n", RETURN_MATCH_STR, ConverBufCounter);
 
         for (int i = 0; i < PositionCounter; i++) {
             printf("%0*d  ", MatchIndexPadding ,i+1); // this will act as an index
-            printf("Start position %0*x.\n", PaddingSize ,matchesPosition[i]);
+            printf("%0*x    ", PaddingSize ,matchesPosition[i]);
+            if ((i+1) % 4 == 0) {
+                printf("\n");
+            }
+            // changed to print spaces instead of newlines
         }
         if (PositionCounter == 0) {
             printf("No matches founded.\n");
@@ -321,12 +338,15 @@ int main(int argc, char *argv[]) {
     if (STATS_FREQ_FLAG == 1 && STATS_FLAG == 0) {
         printf("Frequency flag --freq has to be used with --stats.\n");
         return 1;}
+
     if (STATS_PADDING > 16 || STATS_PADDING == 0) {
         printf("Stats padding size is invalid or too large: %d.", STATS_PADDING);
         return 1;}
+
     if (STATS_SPACEPADDING > 16 || STATS_SPACEPADDING == 0) {
         printf("Stats space padding size is invalid or too large: %d.", STATS_SPACEPADDING);
         return 1;}
+
     if (COLUMN_NUMBER > 16 || COLUMN_NUMBER == 0) {
         printf("Column number is invalid or too large: %d.", COLUMN_NUMBER);
         return 1;}
@@ -346,11 +366,13 @@ int main(int argc, char *argv[]) {
         else {
             printf("Hex with 0 occurences are hidden.\n");
             int Hidden_ColumnCounter = 0;
+            
             for (int i = 0; i < 256; i++) {
                 if (Hidden_ColumnCounter % (COLUMN_NUMBER+1) == 0) {
                     printf("\n");
                     Hidden_ColumnCounter++;
                 }
+
                 if (byteStats[i] != 0) {
                     printf("%.2x: %.*u", i, STATS_PADDING, byteStats[i]);
                     printf("%*s", STATS_SPACEPADDING, "");
@@ -363,5 +385,8 @@ int main(int argc, char *argv[]) {
     printf("\n");
     
     fclose(INPUT_FILE);
+    if (OUTPUT_FLAG == 1) {
+        fclose(OUTPUT_FILE);
+    }
     return 0;
 }

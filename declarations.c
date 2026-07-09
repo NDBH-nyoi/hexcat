@@ -1,19 +1,27 @@
 // This is not for compilation
 // no include directives should get in
-
+#define global // for optimizing purposes
 // Input segment
 char *inFileName = "";
+char *outFileName = "";
+char OUTPUT_FLAG = 0;
+
 char HELP_FLAG = 0; // false. Also the "\0" character.
 char CAPITAL_FLAG = 0;
 
 unsigned char PaddingSize = 8; // default padding size
 
 char STATS_FLAG = 0;
-char STATS_FREQ_FLAG = 0;
+char STATS_FREQ_FLAG = 0; // not implemented
 char STATS_VERBOSE_FLAG = 0;
 unsigned char STATS_PADDING = 4; // Haven't done any work yet
 unsigned char STATS_SPACEPADDING = 4;
 unsigned char COLUMN_NUMBER = 8;
+
+// char DIFF_SUB_FLAG = 0;
+// char WRITE_SUB_FLAG = 0;
+
+
 
 
 // experimenting
@@ -33,13 +41,14 @@ unsigned int byteStats[256] = {0}; // each index represent the value of that byt
 char *MATCH_STRING="";
 char RETURN_MATCH_STR[96] = "";
 char MATCH_FLAG = 0;
-unsigned char MatchIndexPadding = 2;
+unsigned char MatchIndexPadding = 3; // 3 now
 
 char SILENT_FLAG = 0;
 char REFERENCE_FLAG = 0;
 // Can probably do a comparison, and do a stats print with order most frequent to least frequent.
 // if you want, you can make it so bytes with no appearance doesn't get printed.
 
+char *SubCommand = ""; // subcommand
 
 // LOOK HERE FOR DIRECTIVES!!!
 int ch;
@@ -55,6 +64,8 @@ unsigned long long int SECTION_START = 0;
 unsigned long long int SECTION_END = 0;
 char SECTION_PRINT_MARKER = 0;
 char SECTION_FLAG = 0;
+
+
 
 // Note this was on line 122
 unsigned char ConversionBuf[32]; // streamed into from input
