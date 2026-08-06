@@ -4,6 +4,7 @@
 // Input segment
 char *inFileName = "";
 char *outFileName = "";
+char INPUT_FLAG = 0;
 char OUTPUT_FLAG = 0;
 
 char HELP_FLAG = 0; // false. Also the "\0" character.
@@ -12,7 +13,7 @@ char CAPITAL_FLAG = 0;
 unsigned char PaddingSize = 8; // default padding size
 
 char STATS_FLAG = 0;
-char STATS_FREQ_FLAG = 0; // not implemented
+// char STATS_FREQ_FLAG = 0; // not implemented
 char STATS_VERBOSE_FLAG = 0;
 unsigned char STATS_PADDING = 4; // Haven't done any work yet
 unsigned char STATS_SPACEPADDING = 4;
@@ -22,26 +23,19 @@ unsigned char COLUMN_NUMBER = 8;
 // char WRITE_SUB_FLAG = 0;
 
 
-
-
-// experimenting
-// struct sMatch {
-//     char STATS_FLAG;
-//     char STATS_FREQ_FLAG;
-//     char STATS_VERBOSE_FLAG;
-//     unsigned char STATS_PADDING; // Haven't done any work yet
-//     unsigned char STATS_SPACEPADDING;
-//     unsigned char COLUMN_NUMBER;
-// };
-
-
+char TEXT_FLAG = 0;
+char STRING_FLAG =0;
 
 unsigned int byteStats[256] = {0}; // each index represent the value of that byte e.g 0x10 is at index 16
+
 
 char *MATCH_STRING="";
 char RETURN_MATCH_STR[96] = "";
 char MATCH_FLAG = 0;
 unsigned char MatchIndexPadding = 3; // 3 now
+
+char *REGEX_STRING="";
+char REGEX_FLAG = 0;
 
 char SILENT_FLAG = 0;
 char REFERENCE_FLAG = 0;
@@ -65,7 +59,11 @@ unsigned long long int SECTION_END = 0;
 char SECTION_PRINT_MARKER = 0;
 char SECTION_FLAG = 0;
 
-
+char PURE_FLAG = 0;
+char DECIMAL_FLAG = 0;
+char BINARY_FLAG = 0;
+char Endianness = 0;
+unsigned short MultiLength = 1;
 
 // Note this was on line 122
 unsigned char ConversionBuf[32]; // streamed into from input

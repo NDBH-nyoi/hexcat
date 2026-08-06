@@ -2,49 +2,81 @@
 // no include directives should get in
 
 void PRINT_HELP() {
-    printf("Usage: hexcat.exe [flags] <args>...\n");
-    printf("\n");
-    printf("-i <arg>: File input.\n");
-    printf("-o <arg>: File output.\n");
-    printf("-p <arg>: Specify index padding. Also is padding for match positions. "
-        "Default is 8.\n");
-    printf("-caps: Capitalizes hex characters.\n");
-    printf("\n");
-    printf("-st --stats: At the end of cat-ting, "
-        "returns a table with the frequency of each byte.\n");
 
-    printf("flags that support --stats:\n");
-    printf("    -st-p <arg_num>: "
-        "Specify the stats frequency padding. Default is 4.\n");
-    printf("    -st-sp <arg_num>: "
-        "Specify the whitespace padding between columns. Default is 4.\n");
-    printf("    -st-c <arg_num>: "
-        "Specify the number of columns. Default is 8.\n");
-    printf("    -st-v: Stats verbose. Will print hexs that have 0 occurence. "
-        "Default hides this.\n");
-    printf("    -fr --freq: Display stats table from highest to lowest frequency order.\n");
-    printf("\n");
-    printf("-m --match \"num1 num2 ...\": Return the starting position of sequences that matches "
-        "the sequence given.\n");
-    printf("%*sString should be under quotes and seperated by spaces.\n",28,"");
+printf("Usage: hexcat.exe [flags] <args>...\n");
+printf("\n");
+printf("-i <arg>                    : (Optional) File input.\n");
+printf("-o <arg>                    : File output.\n");
+printf("-p <arg>                    : Specify index padding. Also is padding for match positions.\n"
+       "                              Default is 8.\n");
+printf("-caps                       : Capitalizes hex characters.\n");
+printf("\n");
+printf("-st --stats                 : At the end of cat-ting, returns a table with the\n"
+       "                              the frequency of each byte.\n");
 
-    printf("flags that support --match:\n");
-    printf("    -m-p <arg_num>: Specify match index padding. Default is 2.\n");
-    
-    printf("\n");
+printf("\n");
 
-    printf("-sec <line_num1> <line_num2>: Print section from lnum1 to lnum2."
-        " Input will rounded down to the smallest line number\n");
-    printf("%*s(e.g 3d4 will go to 3d0).\n", 30, "");
+printf("flags that support --stats:\n");
+printf("    -st-p  <arg_num>        : Specify the stats frequency padding.\n");
+printf("                              Default is 4.\n");
+printf("    -st-sp <arg_num>        : Specify the whitespace padding between columns.\n");
+printf("                              Default is 4.\n");
+printf("    -st-c  <arg_num>        : Specify the number of columns.\n");
+printf("                              Default is 8.\n");
+printf("    -st-v                   : Stats verbose. Will print hexs that have 0 occurence.\n");
+printf("                              Default hides this.\n");
+// printf("    -fr --freq: Display stats table from highest to lowest frequency order.\n");
+printf("\n");
+printf("-m --match <num1 num2 ...>  : Return the starting position of sequences that matches "
+"the sequence given.\n");
+printf("                              String should be under quotes and seperated by spaces.\n");
 
-    printf("flags derived from -sec:\n");
-    printf("    -l --line <line_num>: Print line line_num.\n");
-    printf("    -se1 <line_num>: Print section 1 line up and 1 line down from current line.\n");
+printf("flags that support --match:\n");
+printf("    -m-p <arg_num>          : Specify match index padding.\n");
+printf("                              Default is 2.\n");
+printf("\n");
+printf("-E <regex_str>              : Returns the starting and ending position of matches using REGEX.\n");
+printf("                              The <regex_str> should be under quotes. Syntax is extended regex\n");
+printf("                              (ERE), which also is the POSIX standard and the standard for C\n");
+printf("                              <regex.h> header.\n");
+printf("\n");
 
-    printf("\n");
-    printf("-sil --silent: Silent mode. Do not print hexdump.\n");
-    printf("-ref: Displays useful references for control characters.\n");
-    printf("-h --help: Show this list.\n");
+printf("-s <line_num1> <line_num2>  : Print section from <line_num1> to <line_num2>.\n");
+printf("                              Breaks out of program when <line_num2> is reached.\n");
+printf("                              Input will rounded down to the smallest line number\n");
+printf("                              example: 3d4 will go to 3d0.\n");
+
+printf("flags derived from -sec:\n");
+printf("    -l --line <line_num>    : Print line <line_num>.\n");
+printf("    -s1       <line_num>    : Print section 1 line above and 1 line below from <line_num>.\n");
+
+printf("\n");
+printf("-txt                        : Expand the text column as well as print escape characters and\n");
+printf("                              starting address column.\n");
+printf("flags that support -txt:\n");
+printf("-str                        : When use with -txt, restrict printing to only alphanumeric\n");
+printf("                              ascii characters.\n");
+
+
+
+printf("\n");
+printf("-P --pure                   : Prints pure hex bytes, no formatting. Is affected by -s flag.\n");
+printf("                              Can be used as stdout.\n");
+printf("flags that support -P:\n");
+printf("Note: don't support -s:\n");
+printf("    -B --binary             : Binary flag, convert all bytes to binary.\n");
+printf("    -M --multi <num> <0/1>  : Merges to create multi-byte numbers. <num> specifies\n");
+printf("                              how many bytes to merge. <0/1> specifies endianness.\n");
+printf("                              0 for little-endian (default), 1 for big-endian.\n");
+printf("-D --decimal                : Decimal flag, convert all bytes to decimal. Also works on -P.\n");
+
+printf("\n");
+printf("hexcat cnv <args...>        : Converts a text string into hex based on ascii.\n");
+
+printf("-sil --silent               : Silent mode. Do not print hexdump.\n");
+printf("-ref                        : Displays useful references for control characters.\n");
+printf("-h --help                   : Show this list.\n");
+
 }
 
 // int is_escape_char(char ch) {
@@ -74,6 +106,13 @@ int is_escape_char(char ch) {
     else {
         return 0;
     }
+}
+
+int is_alphanum(char ch){
+    if (ch >= 0x20 && ch <= 0x7e) {
+        return 1;
+    }
+    else return 0;
 }
 
 void PRINT_REFERENCE(){
