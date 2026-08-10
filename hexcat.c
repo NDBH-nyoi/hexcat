@@ -172,6 +172,36 @@ int main(int argc, char *argv[]) {
             CLI_1ARGS(i, "-E", REGEX_STRING, );
             REGEX_FLAG = 1;
         }
+
+        else if (strcmp(argv[i], "--color") == 0){
+            CLI_0ARGS(i,"--color", COLOR_FLAG);
+        }
+
+        else if (strcmp(argv[i], "--chunks=1") == 0){
+            chunk_divide = 1;
+            i+=1;
+        }
+        
+        else if (strcmp(argv[i], "--chunks=2") == 0){
+            chunk_divide = 2;
+            i+=1;
+        }
+
+        else if (strcmp(argv[i], "--chunks=4") == 0){
+            chunk_divide = 4;
+            i+=1;
+        }
+
+        else if (strcmp(argv[i], "--chunks=8") == 0){
+            chunk_divide = 8;
+            i+=1;
+        }
+
+        else if (strcmp(argv[i], "--chunks=16") == 0){
+            chunk_divide = 16;
+            i+=1;
+        }
+
         else if (strcmp(argv[i], "-P") == 0 || strcmp(argv[i], "--pure") == 0)
         {
             CLI_0ARGS(i, "-P", PURE_FLAG);
@@ -209,25 +239,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    regex_t regex;
     
-    regmatch_t matches[REGEX_MATCHES_PREALLOC];
-    unsigned char matches_index = 0;
-    regmatch_t match;
-    char regex_checker[32] = ""; 
-    unsigned char reg_check_index = 0;
-
-    unsigned char regex_offset = 0;
-
-    if (REGEX_FLAG==1)
-    {
-        if (regcomp(&regex, REGEX_STRING, REG_EXTENDED)!=0)
-        {
-            printf("Error: Regcomp failed.\n");
-            return 1;
-
-        }
-    }
 
     if (PaddingSize > 16 || PaddingSize == 0 || PaddingSize == 1) {
         printf("Padding size is invalid or too large: %d.", PaddingSize);
@@ -308,9 +320,13 @@ int main(int argc, char *argv[]) {
             
             while ((ch = fgetc(INPUT_FILE)) != EOF)
             {
+            if (COLOR_FLAG == 1) printf("\033[38;5;%dm", ch);
+
             if (DECIMAL_FLAG == 1) printf("%.3d ", ch);
             else if (BINARY_FLAG == 1) printf(BYTE_TO_BINARY_PATTERN" ", BYTE_TO_BINARY(ch));
             else printf(_FormatHexChar, ch);
+
+            if (COLOR_FLAG == 1) printf("\033[0m");
             }
             return 0;
 
@@ -327,9 +343,13 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < MultiLength; i++)
             {
             ch = fgetc(INPUT_FILE);
+            if (COLOR_FLAG == 1) printf("\033[38;5;%dm", ch);
+
             if (DECIMAL_FLAG == 1) printf("%.3d", ch);
             else if (BINARY_FLAG == 1) printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(ch));
             else printf("%.2x", ch);
+
+            if (COLOR_FLAG == 1) printf("\033[0m");
             }
         }
         else
@@ -337,10 +357,13 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < MultiLength; i++)
             {
             ending_ch = fgetc(INPUT_FILE);
-            
+            if (COLOR_FLAG == 1) printf("\033[38;5;%dm", ch);
+
             if (DECIMAL_FLAG == 1) printf("%.3d", ending_ch);
             else if (BINARY_FLAG == 1) printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(ending_ch));
             else printf("%.2x", ending_ch);
+
+            if (COLOR_FLAG == 1) printf("\033[0m");
             
             if (fseek(INPUT_FILE, -2, SEEK_CUR) == -1)
                 {
@@ -354,6 +377,7 @@ int main(int argc, char *argv[]) {
         fseek(INPUT_FILE, MultiLength * MultiByte_count, SEEK_SET);
         }
         // how was there no return until now?
+        fclose(INPUT_FILE);
         return 0;
     }
 
@@ -373,13 +397,18 @@ int main(int argc, char *argv[]) {
         }
 
         if ((!SILENT_FLAG && !SECTION_FLAG) || (SECTION_FLAG && SECTION_PRINT_MARKER)) {
+            if (COLOR_FLAG == 1) printf("\033[38;5;%dm", ch);
+
             if (DECIMAL_FLAG == 1) printf("%.3d ", ch);
             else if (BINARY_FLAG == 1) printf(BYTE_TO_BINARY_PATTERN" ", BYTE_TO_BINARY(ch));
             else printf(_FormatHexChar, ch);
+
+            if (COLOR_FLAG == 1) printf("\033[0m");
         }
         Hex_Counter++;
         
         }
+        fclose(INPUT_FILE);
         return 0;
     }
 
@@ -387,9 +416,10 @@ int main(int argc, char *argv[]) {
     printf("%*s", PaddingSize + 2,"");
     for (int i = 0; i < 16; i++) {
         printf(_FormatHexChar, i);
+        if ((i+1) % (16/chunk_divide) == 0 && i+1 != 16) printf(" ");
     }
     for (int i = 0; i < 16; i++) {
-        printf("%x", i);
+        printf("%x", i);   
     }
     printf("\n");
 
@@ -444,9 +474,32 @@ int main(int argc, char *argv[]) {
         printf("Total length: %llu line(s).\n", (SECTION_END - SECTION_START)/16 + 1);
     }
     printf("End of file reached. Total file size: %llu B (0x%llx).\n", LineNum - (16 - Hex_Counter), LineNum - (16 - Hex_Counter));
+    fclose(INPUT_FILE);
     return 0;
     }
     
+
+    regex_t regex;
+    
+    regmatch_t matches[REGEX_MATCHES_PREALLOC];
+    unsigned char matches_index = 0;
+    regmatch_t match;
+    char regex_checker[32] = ""; 
+    unsigned char reg_check_index = 0;
+
+    unsigned char regex_offset = 0;
+
+    if (REGEX_FLAG==1)
+    {
+        if (regcomp(&regex, REGEX_STRING, REG_EXTENDED)!=0)
+        {
+            printf("Error: Regcomp failed.\n");
+            fclose(INPUT_FILE);
+            return 1;
+
+        }
+    }
+
     while ((ch = fgetc(INPUT_FILE)) != EOF) {
         // printf("%c", ch);
         if (Hex_Counter == 16) {
@@ -469,7 +522,8 @@ int main(int argc, char *argv[]) {
                 printf("Note: Section flags stop reading when the end of the section is reached.\n");
                 printf("Flags that require file's completion will fail.\n");
                 printf("\n");
-
+                if (REGEX_FLAG == 1) regfree(&regex);
+                fclose(INPUT_FILE);
                 return 0;
             }
 
@@ -485,7 +539,12 @@ int main(int argc, char *argv[]) {
         
         // SILENT_FLAG != 1 && SECTION_FLAG != 1
         if ((!SILENT_FLAG && !SECTION_FLAG) || (SECTION_FLAG && SECTION_PRINT_MARKER)) {
+            if ((Hex_Counter) % (16/chunk_divide) == 0 && Hex_Counter != 0) printf(" ");
+            if (COLOR_FLAG == 1) printf("\033[38;5;%dm", ch);
+
             printf(_FormatHexChar, ch);
+
+            if (COLOR_FLAG == 1) printf("\033[0m");
         }
         if (OUTPUT_FLAG == 1) {
             fprintf(OUTPUT_FILE,"%c", ch);
@@ -523,6 +582,8 @@ int main(int argc, char *argv[]) {
 
             if (reg_check_index==32)
             {
+                // Conditional jump or move depends on uninitialised value(s)
+
                 while (regexec(&regex, regex_checker + regex_offset , 1, &match, 0) == 0)
                 {
                     match.rm_so += regex_offset;
@@ -563,6 +624,8 @@ int main(int argc, char *argv[]) {
                         printf("\n");
                         printf("Error: Regex matches exceeded buffer.\n");
                         printf("\n");
+                        regfree(&regex);
+                        fclose(INPUT_FILE);
                         return 1;
                     }
                 }
@@ -585,15 +648,27 @@ int main(int argc, char *argv[]) {
             if ((!SILENT_FLAG && !SECTION_FLAG) || (SECTION_FLAG && SECTION_PRINT_MARKER)) {
                 for (int i = 0; i < 16; i++) {
                     if (is_escape_char(*(Buf_forChars16+i)) == 1) {
+                        if (COLOR_FLAG == 1) printf("\033[38;5;%dm", *(Buf_forChars16+i));
+                        
                         printf(".");
+                        
+                        if (COLOR_FLAG == 1) printf("\033[0m");
                     }
                     else {
+                        if (COLOR_FLAG == 1) printf("\033[38;5;%dm", *(Buf_forChars16+i));
+                        
                         printf("%c", *(Buf_forChars16+i));
+                        
+                        if (COLOR_FLAG == 1) printf("\033[0m");
+
                     }
                 }
             } 
         }     
     }
+
+    // this part is for dealing with the residue characters
+    // that weren't printed
 
     if (REGEX_FLAG==1 && reg_check_index!= 32)
     {
@@ -607,13 +682,13 @@ int main(int argc, char *argv[]) {
 
             if (match.rm_so >= 0x10)
                 {
-                    match.rm_so += LineNum - 16;
-                    match.rm_eo += LineNum - 16;
+                    match.rm_so += LineNum - 16 - 16;
+                    match.rm_eo += LineNum - 16 - 16;
                 }
                 else
                 {
-                    match.rm_so += LineNum - 32;
-                    match.rm_eo += LineNum - 32;
+                    match.rm_so += LineNum - 32 - 16;
+                    match.rm_eo += LineNum - 32 - 16;
                 }
 
                 if ((matches_index - 1) != -1)
@@ -646,27 +721,36 @@ int main(int argc, char *argv[]) {
                 printf("\n");
                 printf("Error: Regex matches exceeded buffer.\n");
                 printf("\n");
+                regfree(&regex);
+                fclose(INPUT_FILE);
                 return 1;
             }
         }
     }
 
-
     // this part is for dealing with the residue characters
     // that weren't printed
 
-    
 
     if ((!SILENT_FLAG && !SECTION_FLAG) || (SECTION_FLAG && SECTION_PRINT_MARKER)) {
         for (int i = 0; i < 16 - Hex_Counter; i++) {
+            if ((Hex_Counter) % (16/chunk_divide) == 0 && Hex_Counter != 0) printf(" ");
             printf("   ");
         }
         for (int i = 0; i < Hex_Counter; i++) {
             if (is_escape_char(*(Buf_forChars16+i)) == 1) {
+                if (COLOR_FLAG == 1) printf("\033[38;5;%dm", *(Buf_forChars16+i));
+                
                 printf(".");
+                
+                if (COLOR_FLAG == 1) printf("\033[0m");
             }
             else {
+                if (COLOR_FLAG == 1) printf("\033[38;5;%dm", *(Buf_forChars16+i));
+                
                 printf("%c", *(Buf_forChars16+i));
+                
+                if (COLOR_FLAG == 1) printf("\033[0m");
             }
         }
     }
@@ -698,10 +782,10 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < matches_index; i++)
         {
             printf("%0*d  ", MatchIndexPadding ,i+1);
-            printf("%0*x - %0*x\n",PaddingSize, matches[i].rm_so, PaddingSize, matches[i].rm_eo - 1);
-            // if ((i+1) % 4 == 0) {
-            //     printf("\n");
-            // }
+            printf("%0*x - %0*x    ",PaddingSize, matches[i].rm_so, PaddingSize, matches[i].rm_eo - 1);
+            if ((i+1) % 4 == 0) {
+                printf("\n");
+            }
             
         }
         if (matches_index == 0) {
@@ -737,14 +821,20 @@ int main(int argc, char *argv[]) {
 
     if (STATS_PADDING > 16 || STATS_PADDING == 0) {
         printf("Stats padding size is invalid or too large: %d.", STATS_PADDING);
+        regfree(&regex);
+        fclose(INPUT_FILE);
         return 1;}
 
     if (STATS_SPACEPADDING > 16 || STATS_SPACEPADDING == 0) {
         printf("Stats space padding size is invalid or too large: %d.", STATS_SPACEPADDING);
+        regfree(&regex);
+        fclose(INPUT_FILE);
         return 1;}
 
     if (COLUMN_NUMBER > 16 || COLUMN_NUMBER == 0) {
         printf("Column number is invalid or too large: %d.", COLUMN_NUMBER);
+        regfree(&regex);
+        fclose(INPUT_FILE);
         return 1;}
 
     if (STATS_FLAG == 1) {
@@ -784,5 +874,10 @@ int main(int argc, char *argv[]) {
     if (OUTPUT_FLAG == 1) {
         fclose(OUTPUT_FILE);
     }
+
+    if (REGEX_FLAG == 1) {
+        regfree(&regex);
+    }
+
     return 0;
 }

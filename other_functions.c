@@ -2,8 +2,9 @@
 // no include directives should get in
 
 void PRINT_HELP() {
-
-printf("Usage: hexcat.exe [flags] <args>...\n");
+printf("hexcat: A hex viewer.\n");
+printf("\n");
+printf("Usage: hexcat [flags] <args>...\n");
 printf("\n");
 printf("-i <arg>                    : (Optional) File input.\n");
 printf("-o <arg>                    : File output.\n");
@@ -71,8 +72,12 @@ printf("                              0 for little-endian (default), 1 for big-e
 printf("-D --decimal                : Decimal flag, convert all bytes to decimal. Also works on -P.\n");
 
 printf("\n");
+printf("--chunks=<num>              : Specify how many chunks to divide the hex into. Default is 2.\n");
+printf("                            : Possible values are 1, 2, 4, 8, 16.\n");
+printf("\n");
 printf("hexcat cnv <args...>        : Converts a text string into hex based on ascii.\n");
 
+printf("--color                     : Format bytes with 8-bit colors based on the value of the bytes.\n");
 printf("-sil --silent               : Silent mode. Do not print hexdump.\n");
 printf("-ref                        : Displays useful references for control characters.\n");
 printf("-h --help                   : Show this list.\n");

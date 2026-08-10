@@ -26,6 +26,9 @@ unsigned char COLUMN_NUMBER = 8;
 char TEXT_FLAG = 0;
 char STRING_FLAG =0;
 
+char COLOR_FLAG = 0;
+unsigned char chunk_divide = 2;
+
 unsigned int byteStats[256] = {0}; // each index represent the value of that byte e.g 0x10 is at index 16
 
 
